@@ -144,7 +144,7 @@ EOF
 
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux64/headless_shell \
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-headless-shell-linux64/chrome-headless-shell \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''
