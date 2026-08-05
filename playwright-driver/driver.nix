@@ -48,10 +48,14 @@ let
       jq
     ];
 
-    ELECTRON_SKIP_BINARY_DOWNLOAD = true;
+    env.ELECTRON_SKIP_BINARY_DOWNLOAD = true;
 
     postPatch = ''
       sed -i '/\/\/ Update test runner./,/^\s*$/{d}' utils/build/build.js
+      # The dlopen library check uses ldconfig, which does not work under Nix.
+      # Libraries are already provided via rpath by autoPatchelfHook and wrapProgram.
+      substituteInPlace packages/playwright-core/src/server/registry/index.ts \
+        --replace-fail "['libGLESv2.so.2', 'libx264.so']" "[]"
     '';
 
     installPhase = ''
@@ -103,6 +107,7 @@ let
 
     passthru = {
       browsersJSON = (lib.importJSON ./browsers.json).browsers;
+      selectBrowsers = browsers;
       browsers = browsers { };
       browsers-chromium = browsers {
         withFirefox = false;

@@ -21,7 +21,7 @@
   harfbuzz,
   harfbuzzFull,
   hyphen,
-  icu70,
+  icu74,
   lcms,
   libavif,
   libbacktrace,
@@ -41,7 +41,7 @@
   libwpe,
   libwpe-fdo,
   libxkbcommon,
-  libxml2,
+  libxml2_13,
   libxslt,
   libgbm,
   sqlite,
@@ -74,7 +74,7 @@ let
 
   suffix' =
     if lib.hasPrefix "linux" suffix then
-      "ubuntu-22.04" + (lib.removePrefix "linux" suffix)
+      "ubuntu-24.04" + (lib.removePrefix "linux" suffix)
     else if lib.hasPrefix "mac" suffix then
       "mac-14" + (lib.removePrefix "mac" suffix)
     else
@@ -90,19 +90,6 @@ let
       };
     }
   );
-  libavif' = libavif.overrideAttrs (
-    finalAttrs: previousAttrs: {
-      version = "0.9.3";
-      src = fetchFromGitHub {
-        owner = "AOMediaCodec";
-        repo = finalAttrs.pname;
-        rev = "v${finalAttrs.version}";
-        hash = "sha256-ME/mkaHhFeHajTbc7zhg9vtf/8XgkgSRu9I/mlQXnds=";
-      };
-      postPatch = "";
-      patches = [ ];
-    }
-  );
 
   libjxl' = libjxl.overrideAttrs (
     finalAttrs: previousAttrs: {
@@ -114,6 +101,10 @@ let
         hash = "sha256-I3PGgh0XqRkCFz7lUZ3Q4eU0+0GwaQcVb6t4Pru1kKo=";
         fetchSubmodules = true;
       };
+      outputs = [
+        "out"
+        "dev"
+      ];
       patches = [
         # Add missing <atomic> content to fix gcc compilation for RISCV architecture
         # https://github.com/libjxl/libjxl/pull/2211
@@ -157,8 +148,8 @@ let
       stripRoot = false;
       hash =
         {
-          x86_64-linux = "sha256-QHCYfbUOcTsRm7ZKhVdRSUVmnx6Xjul3xkDSwR7XMX8=";
-          aarch64-linux = "sha256-vbMYXrpQX9r5Zcu6KnZwALhecjos53gzIy5bpiyoHWA=";
+          x86_64-linux = "sha256-GASDnneoxfZLUctJLnaUTPW4HDbKdSamJBxFDVpPUC0=";
+          aarch64-linux = "sha256-qtqMCyEZVQu44HGI73t50D1WcnuzxuxLY7MDzf4NDeA=";
         }
         .${system} or throwSystem;
     };
@@ -184,14 +175,14 @@ let
       harfbuzz
       harfbuzzFull
       hyphen
-      icu70
+      icu74
       lcms
-      libavif'
+      libavif
       libbacktrace
       libdrm
       libepoxy
       libevent
-      libgcc.lib
+      libgcc
       libgcrypt
       libgpg-error
       libjpeg8
@@ -203,7 +194,7 @@ let
       libwpe
       libwpe-fdo
       libvpx'
-      libxml2
+      libxml2_13
       libxslt
       libgbm
       sqlite
@@ -223,17 +214,9 @@ let
       # remove bundled libs
       rm -rf $out/minibrowser-wpe/sys
 
-      # TODO: still fails on ubuntu trying to find libEGL_mesa.so.0
       wrapProgram $out/minibrowser-wpe/bin/MiniBrowser \
         --prefix GIO_EXTRA_MODULES ":" "${glib-networking}/lib/gio/modules/" \
         --prefix LD_LIBRARY_PATH ":" $out/minibrowser-wpe/lib
-
-    '';
-
-    preFixup = ''
-      # Fix libxml2 breakage. See https://github.com/NixOS/nixpkgs/pull/396195#issuecomment-2881757108
-      mkdir -p "$out/lib"
-      ln -s "${lib.getLib libxml2}/lib/libxml2.so" "$out/lib/libxml2.so.2"
     '';
   };
   webkit-darwin = fetchzip {
